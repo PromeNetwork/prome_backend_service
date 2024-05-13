@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.biz.mapper.CouponMapper">
+    
+    <resultMap type="Coupon" id="CouponResult">
+        <result property="id"    column="id"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="address"    column="address"    />
+        <result property="code"    column="code"    />
+        <result property="status"    column="status"    />
+        <result property="serial"    column="serial"    />
+    </resultMap>
+
+    <sql id="selectCouponVo">
+        select id, create_time, address, code, status, serial from coupon
+    </sql>
+
+    <select id="selectCouponList" parameterType="Coupon" resultMap="CouponResult">
+        <include refid="selectCouponVo"/>
+        <where>  
+            <if test="address != null  and address != ''"> and address = #{address}</if>
+            <if test="code != null  and code != ''"> and code = #{code}</if>
+            <if test="status != null "> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectCouponById" parameterType="Long" resultMap="CouponResult">
+        <include refid="selectCouponVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertCoupon" parameterType="Coupon">
+        insert into coupon
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="address != null">address,</if>
+            <if test="code != null">code,</if>
+            <if test="status != null">status,</if>
+            <if test="serial != null">serial,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="address != null">#{address},</if>
+            <if test="code != null">#{code},</if>
+            <if test="status != null">#{status},</if>
+            <if test="serial != null">#{serial},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCoupon" parameterType="Coupon">
+        update coupon
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="code != null">code = #{code},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="serial != null">serial = #{serial},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCouponById" parameterType="Long">
+        delete from coupon where id = #{id}
+    </delete>
+
+    <delete id="deleteCouponByIds" parameterType="String">
+        delete from coupon where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

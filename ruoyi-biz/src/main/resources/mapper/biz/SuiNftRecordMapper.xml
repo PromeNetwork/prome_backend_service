@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.biz.mapper.SuiNftRecordMapper">
+    
+    <resultMap type="SuiNftRecord" id="SuiNftRecordResult">
+        <result property="id"    column="id"    />
+        <result property="sender"    column="sender"    />
+        <result property="receiver"    column="receiver"    />
+        <result property="amount"    column="amount"    />
+        <result property="txtype"    column="txtype"    />
+        <result property="digest"    column="digest"    />
+        <result property="checkpoint"    column="checkpoint"    />
+        <result property="cointype"    column="cointype"    />
+        <result property="objectid"    column="objectid"    />
+        <result property="timestamp"    column="timestamp"    />
+    </resultMap>
+
+    <resultMap id="TimeWindowResult" type="TimeWindow">
+        <result property="timeWindow" column="timeWindow"/>
+        <result property="total" column="total"/>
+    </resultMap>
+    <resultMap id="TotalStatuResult"  type="TotalStatu">
+        <result property="coinType" column="coinType"/>
+        <result property="create" column="createTx"/>
+        <result property="transfer" column="transferTx"/>
+    </resultMap>
+   <resultMap id="RankResult" type="Rank">
+        <result property="total" column="total"/>
+        <result property="receiver" column="receiver"/>
+   </resultMap>
+
+    <sql id="selectSuiNftRecordVo">
+        select id, sender, receiver, amount, txtype, digest, checkpoint, cointype, objectid, timestamp from sui_nft_record
+    </sql>
+
+    <select id="selectSuiNftRecordList" parameterType="SuiNftRecord" resultMap="SuiNftRecordResult">
+        <include refid="selectSuiNftRecordVo"/>
+        <where>  
+            <if test="sender != null  and sender != ''"> and sender = #{sender}</if>
+            <if test="receiver != null  and receiver != ''"> and receiver = #{receiver}</if>
+            <if test="params.beginAmount != null and params.beginAmount != '' and params.endAmount != null and params.endAmount != ''"> and cast(amount as INTEGER) > cast(#{params.beginAmount} as INTEGER) and cast(amount as INTEGER) &lt; cast(#{params.endAmount} as INTEGER)</if>
+            <if test="txtype != null  and txtype != ''"> and txtype = #{txtype}</if>
+            <if test="digest != null  and digest != ''"> and digest = #{digest}</if>
+            <if test="checkpoint != null  and checkpoint != ''"> and checkpoint = #{checkpoint}</if>
+            <if test="cointype != null  and cointype != ''"> and cointype = #{cointype}</if>
+            <if test="objectid != null  and objectid != ''"> and objectid = #{objectid}</if>
+            <if test="params.beginTimestamp != null and params.beginTimestamp != '' and params.endTimestamp != null and params.endTimestamp != ''"> and  cast(timestamp as BIGINT) between cast(#{params.beginTimestamp} as BIGINT) and cast(#{params.endTimestamp} as BIGINT) </if>
+        </where>
+          order by id desc
+    </select>
+    <select id="selectShredByDay" resultMap="TimeWindowResult">
+        SELECT
+            DATE_TRUNC('day', to_timestamp(timestamp/1000)) AS timeWindow,
+            sum(cast(amount as Integer)) as total
+        FROM
+            sui_nft_record
+        WHERE
+            to_timestamp(timestamp/1000) >= NOW() - INTERVAL '4 week' and txtype='transfer'
+                and cointype='0x6d96653fa178ca396ba7c98529e43959774a9a8cb7f5fef2e2ebf703fbd990b0::coin_factory::COIN_FACTORY'
+        GROUP BY
+            timeWindow
+        ORDER BY
+            timeWindow LIMIT 1000;
+    </select>
+    <select id="selectShredMintByDay" resultMap="TimeWindowResult">
+        SELECT
+            DATE_TRUNC('day', to_timestamp(timestamp/1000)) AS timeWindow,
+            sum(cast(amount as Integer)) as total
+        FROM
+            sui_nft_record
+        WHERE
+            to_timestamp(timestamp/1000) >= NOW() - INTERVAL '4 week' and txtype='create'
+                and cointype='0x6d96653fa178ca396ba7c98529e43959774a9a8cb7f5fef2e2ebf703fbd990b0::coin_factory::COIN_FACTORY'
+        GROUP BY
+            timeWindow
+        ORDER BY
+            timeWindow LIMIT 1000;
+    </select>
+    <select id="selectSwordTxByDay" resultMap="TimeWindowResult">
+        SELECT
+            DATE_TRUNC('day', to_timestamp(timestamp/1000)) AS timeWindow,
+            COUNT(*) AS total
+        FROM
+            sui_nft_record
+        WHERE
+            to_timestamp(timestamp/1000) >= NOW() - INTERVAL '4 week' and txtype='create'
+                and cointype='0xa11aff0a107eed655dc0568b72edf1877d21fdaaccf9a8f00926625ae9060704::nft_factory::BlockusNft'
+        GROUP BY
+            timeWindow
+        ORDER BY
+            timeWindow LIMIT 1000;
+    </select>
+
+    <select id="selectSwordMintByDay" resultMap="TimeWindowResult">
+        SELECT
+            DATE_TRUNC('day', to_timestamp(timestamp/1000)) AS timeWindow,
+            COUNT(*) AS total
+        FROM
+            sui_nft_record
+        WHERE
+            to_timestamp(timestamp/1000) >= NOW() - INTERVAL '4 week' and txtype='transfer'
+                and cointype='0xa11aff0a107eed655dc0568b72edf1877d21fdaaccf9a8f00926625ae9060704::nft_factory::BlockusNft'
+        GROUP BY
+            timeWindow
+        ORDER BY
+            timeWindow LIMIT 1000
+    </select>
+
+    <select id="selectRank" resultMap="RankResult">
+        select sum(cast(amount as INTEGER ) ) as total,receiver  from sui_nft_record where  to_timestamp(timestamp/1000) >= NOW() - INTERVAL '4 week'  and cointype='0x6d96653fa178ca396ba7c98529e43959774a9a8cb7f5fef2e2ebf703fbd990b0::coin_factory::COIN_FACTORY' and cast(amount as INTEGER ) > 1 group BY "receiver"   ORDER BY total desc  LIMIT 50
+    </select>
+
+    <select id="selectTotalStatus" resultMap="TotalStatuResult">
+        SELECT
+            cointype as coinType,
+            SUM(CASE WHEN txType = 'create' THEN CAST(amount AS INTEGER) ELSE 0 END) AS createTx,
+            SUM(CASE WHEN txType != 'create' THEN CAST(amount AS INTEGER) ELSE 0 END) AS transferTx
+        FROM
+            sui_nft_record
+        GROUP BY
+            cointype
+        LIMIT 2
+    </select>
+    
+    <select id="selectSuiNftRecordById" parameterType="Long" resultMap="SuiNftRecordResult">
+        <include refid="selectSuiNftRecordVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertSuiNftRecord" parameterType="SuiNftRecord" useGeneratedKeys="true" keyProperty="id">
+        insert into sui_nft_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="sender != null and sender != ''">sender,</if>
+            <if test="receiver != null and receiver != ''">receiver,</if>
+            <if test="amount != null and amount != ''">amount,</if>
+            <if test="txtype != null and txtype != ''">txtype,</if>
+            <if test="digest != null and digest != ''">digest,</if>
+            <if test="checkpoint != null and checkpoint != ''">checkpoint,</if>
+            <if test="cointype != null and cointype != ''">cointype,</if>
+            <if test="objectid != null">objectid,</if>
+            <if test="timestamp != null">timestamp,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="sender != null and sender != ''">#{sender},</if>
+            <if test="receiver != null and receiver != ''">#{receiver},</if>
+            <if test="amount != null and amount != ''">#{amount},</if>
+            <if test="txtype != null and txtype != ''">#{txtype},</if>
+            <if test="digest != null and digest != ''">#{digest},</if>
+            <if test="checkpoint != null and checkpoint != ''">#{checkpoint},</if>
+            <if test="cointype != null and cointype != ''">#{cointype},</if>
+            <if test="objectid != null">#{objectid},</if>
+            <if test="timestamp != null">#{timestamp},</if>
+         </trim>
+    </insert>
+
+    <update id="updateSuiNftRecord" parameterType="SuiNftRecord">
+        update sui_nft_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="sender != null and sender != ''">sender = #{sender},</if>
+            <if test="receiver != null and receiver != ''">receiver = #{receiver},</if>
+            <if test="amount != null and amount != ''">amount = #{amount},</if>
+            <if test="txtype != null and txtype != ''">txtype = #{txtype},</if>
+            <if test="digest != null and digest != ''">digest = #{digest},</if>
+            <if test="checkpoint != null and checkpoint != ''">checkpoint = #{checkpoint},</if>
+            <if test="cointype != null and cointype != ''">cointype = #{cointype},</if>
+            <if test="objectid != null">objectid = #{objectid},</if>
+            <if test="timestamp != null">timestamp = #{timestamp},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteSuiNftRecordById" parameterType="Long">
+        delete from sui_nft_record where id = #{id}
+    </delete>
+
+    <delete id="deleteSuiNftRecordByIds" parameterType="String">
+        delete from sui_nft_record where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

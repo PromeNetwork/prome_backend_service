@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.biz.mapper.AccountV2Mapper">
+    
+    <resultMap type="AccountV2" id="AccountV2Result">
+        <result property="id"    column="id"    />
+        <result property="uid"    column="uid"    />
+        <result property="username"    column="username"    />
+        <result property="email"    column="email"    />
+        <result property="isEmailVerified"    column="is_email_verified"    />
+        <result property="registerTimestamp"    column="register_timestamp"    />
+        <result property="randomString"    column="random_string"    />
+        <result property="passwordHash"    column="password_hash"    />
+        <result property="newsLetterSubscription"    column="news_letter_subscription"    />
+        <result property="avatar"    column="avatar"    />
+        <result property="thirdPartyLoginField"    column="third_party_login_field"    />
+        <result property="registerType"    column="register_type"    />
+        <result property="referrer"    column="referrer"    />
+        <result property="wallets"    column="wallets"    />
+        <result property="socialAccountGoogle"    column="social_account_google"    />
+        <result property="isOldAccount"    column="is_old_account"    />
+        <result property="accountTag"    column="account_tag"    />
+        <result property="gamePackageId"    column="game_package_id"    />
+        <result property="blockusSuiWallet"    column="blockus_sui_wallet"    />
+        <result property="parent"    column="parent"    />
+        <result property="paths"    column="paths"    />
+        <result property="address"    column="address"    />
+        <result property="taskCount"    column="taskCount"    />
+    </resultMap>
+
+    <select id="selectAccountV2Count">
+        select count(1) from account_v2 where paths like concat('%', #{randomString}, '%')
+    </select>
+    <sql id="selectAccountV2Vo">
+        select id, uid, username, email, is_email_verified, register_timestamp, random_string, password_hash, news_letter_subscription, avatar, third_party_login_field, register_type, referrer, wallets, social_account_google, is_old_account, account_tag, game_package_id, blockus_sui_wallet, parent, paths, address, task_count from account_v2
+    </sql>
+
+    <select id="selectAccountV2List" parameterType="AccountV2" resultMap="AccountV2Result">
+        <include refid="selectAccountV2Vo"/>
+        <where>  
+            <if test="uid != null  and uid != ''"> and uid = #{uid}</if>
+            <if test="username != null  and username != ''"> and username like concat('%', #{username}, '%')</if>
+            <if test="email != null  and email != ''"> and email = #{email}</if>
+            <if test="isEmailVerified != null  and isEmailVerified != ''"> and is_email_verified = #{isEmailVerified}</if>
+            <if test="registerTimestamp != null "> and register_timestamp = #{registerTimestamp}</if>
+            <if test="randomString != null  and randomString != ''"> and random_string = #{randomString}</if>
+            <if test="passwordHash != null  and passwordHash != ''"> and password_hash = #{passwordHash}</if>
+            <if test="newsLetterSubscription != null  and newsLetterSubscription != ''"> and news_letter_subscription = #{newsLetterSubscription}</if>
+            <if test="avatar != null  and avatar != ''"> and avatar = #{avatar}</if>
+            <if test="thirdPartyLoginField != null  and thirdPartyLoginField != ''"> and third_party_login_field = #{thirdPartyLoginField}</if>
+            <if test="registerType != null  and registerType != ''"> and register_type = #{registerType}</if>
+            <if test="referrer != null  and referrer != ''"> and referrer = #{referrer}</if>
+            <if test="socialAccountGoogle != null  and socialAccountGoogle != ''"> and social_account_google = #{socialAccountGoogle}</if>
+            <if test="isOldAccount != null  and isOldAccount != ''"> and is_old_account = #{isOldAccount}</if>
+            <if test="accountTag != null  and accountTag != ''"> and account_tag = #{accountTag}</if>
+            <if test="gamePackageId != null  and gamePackageId != ''"> and game_package_id = #{gamePackageId}</if>
+            <if test="blockusSuiWallet != null  and blockusSuiWallet != ''"> and blockus_sui_wallet = #{blockusSuiWallet}</if>
+            <if test="parent != null  and parent != ''"> and parent = #{parent}</if>
+            <if test="inviteCode != null  and inviteCode != ''"> and paths like concat('%', #{inviteCode}, '/%') </if>
+            <if test="address != null  and address != ''"> and address = #{address}</if>
+        </where>
+    </select>
+    
+    <select id="selectAccountV2ById" parameterType="Long" resultMap="AccountV2Result">
+        <include refid="selectAccountV2Vo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertAccountV2" parameterType="AccountV2" useGeneratedKeys="true" keyProperty="id">
+        insert into account_v2
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="uid != null and uid != ''">uid,</if>
+            <if test="username != null and username != ''">username,</if>
+            <if test="email != null">email,</if>
+            <if test="isEmailVerified != null and isEmailVerified != ''">is_email_verified,</if>
+            <if test="registerTimestamp != null">register_timestamp,</if>
+            <if test="randomString != null and randomString != ''">random_string,</if>
+            <if test="passwordHash != null and passwordHash != ''">password_hash,</if>
+            <if test="newsLetterSubscription != null and newsLetterSubscription != ''">news_letter_subscription,</if>
+            <if test="avatar != null">avatar,</if>
+            <if test="thirdPartyLoginField != null">third_party_login_field,</if>
+            <if test="registerType != null">register_type,</if>
+            <if test="referrer != null">referrer,</if>
+            <if test="wallets != null">wallets,</if>
+            <if test="socialAccountGoogle != null">social_account_google,</if>
+            <if test="isOldAccount != null">is_old_account,</if>
+            <if test="accountTag != null">account_tag,</if>
+            <if test="gamePackageId != null">game_package_id,</if>
+            <if test="blockusSuiWallet != null">blockus_sui_wallet,</if>
+            <if test="parent != null">parent,</if>
+            <if test="paths != null">paths,</if>
+            <if test="address != null and address != ''">address,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="uid != null and uid != ''">#{uid},</if>
+            <if test="username != null and username != ''">#{username},</if>
+            <if test="email != null">#{email},</if>
+            <if test="isEmailVerified != null and isEmailVerified != ''">#{isEmailVerified},</if>
+            <if test="registerTimestamp != null">#{registerTimestamp},</if>
+            <if test="randomString != null and randomString != ''">#{randomString},</if>
+            <if test="passwordHash != null and passwordHash != ''">#{passwordHash},</if>
+            <if test="newsLetterSubscription != null and newsLetterSubscription != ''">#{newsLetterSubscription},</if>
+            <if test="avatar != null">#{avatar},</if>
+            <if test="thirdPartyLoginField != null">#{thirdPartyLoginField},</if>
+            <if test="registerType != null">#{registerType},</if>
+            <if test="referrer != null">#{referrer},</if>
+            <if test="wallets != null">#{wallets},</if>
+            <if test="socialAccountGoogle != null">#{socialAccountGoogle},</if>
+            <if test="isOldAccount != null">#{isOldAccount},</if>
+            <if test="accountTag != null">#{accountTag},</if>
+            <if test="gamePackageId != null">#{gamePackageId},</if>
+            <if test="blockusSuiWallet != null">#{blockusSuiWallet},</if>
+            <if test="parent != null">#{parent},</if>
+            <if test="paths != null">#{paths},</if>
+            <if test="address != null and address != ''">#{address},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAccountV2" parameterType="AccountV2">
+        update account_v2
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="uid != null and uid != ''">uid = #{uid},</if>
+            <if test="username != null and username != ''">username = #{username},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="isEmailVerified != null and isEmailVerified != ''">is_email_verified = #{isEmailVerified},</if>
+            <if test="registerTimestamp != null">register_timestamp = #{registerTimestamp},</if>
+            <if test="randomString != null and randomString != ''">random_string = #{randomString},</if>
+            <if test="passwordHash != null and passwordHash != ''">password_hash = #{passwordHash},</if>
+            <if test="newsLetterSubscription != null and newsLetterSubscription != ''">news_letter_subscription = #{newsLetterSubscription},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="thirdPartyLoginField != null">third_party_login_field = #{thirdPartyLoginField},</if>
+            <if test="registerType != null">register_type = #{registerType},</if>
+            <if test="referrer != null">referrer = #{referrer},</if>
+            <if test="wallets != null">wallets = #{wallets},</if>
+            <if test="socialAccountGoogle != null">social_account_google = #{socialAccountGoogle},</if>
+            <if test="isOldAccount != null">is_old_account = #{isOldAccount},</if>
+            <if test="accountTag != null">account_tag = #{accountTag},</if>
+            <if test="gamePackageId != null">game_package_id = #{gamePackageId},</if>
+            <if test="blockusSuiWallet != null">blockus_sui_wallet = #{blockusSuiWallet},</if>
+            <if test="parent != null">parent = #{parent},</if>
+            <if test="paths != null">paths = #{paths},</if>
+            <if test="taskCount != null">task_count = #{taskCount},</if>
+            <if test="address != null and address != ''">address = #{address},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAccountV2ById" parameterType="Long">
+        delete from account_v2 where id = #{id}
+    </delete>
+
+    <delete id="deleteAccountV2ByIds" parameterType="String">
+        delete from account_v2 where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
